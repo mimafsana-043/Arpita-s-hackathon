@@ -1,0 +1,21 @@
+{
+  "name": "smart-office-energy-backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared source-of-truth backend for the Smart Office dashboard and Discord bot.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "verify": "node src/scripts/verifyStore.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}

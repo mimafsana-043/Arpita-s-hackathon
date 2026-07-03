@@ -41,8 +41,13 @@ export function updateDeviceStatus(id, status) {
 
 export const getRoomSummary = () => calculateRoomSummary(devices, ROOM_NAMES)
 
-export const getUsageSummary = () => ({
-  totalPowerW: calculateTotalPowerW(devices),
-  rooms: getRoomSummary(),
-  updatedAt: new Date().toISOString(),
-})
+export const getUsageSummary = () => {
+  const totalPowerW = calculateTotalPowerW(devices)
+
+  return {
+    totalPowerW,
+    totalPower: totalPowerW,
+    rooms: getRoomSummary(),
+    updatedAt: new Date().toISOString(),
+  }
+}

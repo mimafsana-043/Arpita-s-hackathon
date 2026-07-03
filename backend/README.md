@@ -61,3 +61,70 @@ The verification checks the 18-device count, unique IDs, six devices per room, i
 - `getUsageSummary()`
 
 Getter results are defensive snapshots. The module's internal device array remains the single mutable source of truth.
+
+## REST snapshot API
+
+Every response below is generated from `src/store/deviceStore.js`. There are no route-level mock device arrays.
+
+| Method | Canonical endpoint | Alias | Description |
+| --- | --- | --- | --- |
+| GET | `/api/devices` | `/devices` | All 18 devices |
+| GET | `/api/rooms` | `/rooms` | Three grouped room snapshots |
+| GET | `/api/rooms/:roomName` | `/room/:roomName` | One room snapshot |
+| GET | `/api/usage` | `/usage` | Total, per-room, and estimated daily usage |
+| GET | `/api/alerts` | `/alerts` | Active alerts; empty in Step 2 |
+| GET | `/api/status` | — | Human-friendly office summary for Discord |
+
+Device responses retain both naming conventions used by clients:
+
+```json
+{
+  "id": "drawing_room_fan_1",
+  "ratedPowerW": 60,
+  "power": 60,
+  "currentPowerW": 0,
+  "currentPower": 0
+}
+```
+
+Usage response example:
+
+```json
+{
+  "totalPowerW": 0,
+  "totalPower": 0,
+  "rooms": {
+    "Drawing Room": {
+      "powerW": 0,
+      "power": 0,
+      "activeFans": 0,
+      "activeLights": 0,
+      "totalDevicesOn": 0
+    }
+  },
+  "estimatedTodayKWh": 0,
+  "updatedAt": "2026-07-03T16:00:00.000Z"
+}
+```
+
+`estimatedTodayKWh` is intentionally a Step 2 approximation: current watts × elapsed hours since server-local midnight ÷ 1000. It assumes the present load was constant throughout the elapsed day. A future usage accumulator can replace this without changing the endpoint shape.
+
+### Room aliases
+
+- Drawing Room: `drawing`, `drawing-room`
+- Work Room 1: `work1`, `work-room-1`
+- Work Room 2: `work2`, `work-room-2`
+
+Unknown rooms return HTTP 404 with a JSON message, available rooms, and supported aliases.
+
+### Dashboard snapshot flow
+
+On startup and after Socket.IO reconnection, fetch these in parallel:
+
+```text
+GET /api/devices
+GET /api/usage
+GET /api/alerts
+```
+
+The dashboard should render this snapshot before applying subsequent live socket events.

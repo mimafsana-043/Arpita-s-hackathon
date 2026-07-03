@@ -6,6 +6,13 @@ import {
   getUsageSummary,
   updateDeviceStatus,
 } from '../store/deviceStore.js'
+import {
+  createRoomsSnapshot,
+  createStatusSnapshot,
+  createUsageSnapshot,
+  estimateTodayKWh,
+} from '../services/snapshotService.js'
+import { resolveRoomName } from '../utils/rooms.js'
 
 const devices = getAllDevices()
 
@@ -20,12 +27,20 @@ ROOM_NAMES.forEach((room) => {
 })
 
 assert.equal(getUsageSummary().totalPowerW, 0, 'Initial usage must be zero')
+assert.equal(createRoomsSnapshot().length, 3, 'Rooms endpoint must return three rooms')
+assert.equal(resolveRoomName('work1'), 'Work Room 1')
+assert.equal(resolveRoomName('work-room-2'), 'Work Room 2')
+assert.equal(resolveRoomName('unknown'), null)
 
 const enabledFan = updateDeviceStatus('drawing_room_fan_1', 'ON')
 assert.equal(enabledFan.currentPowerW, 60)
 assert.equal(enabledFan.currentPower, 60)
 assert.ok(enabledFan.onSince)
 assert.equal(getUsageSummary().totalPowerW, 60)
+assert.equal(createUsageSnapshot().totalPower, 60)
+assert.equal(createUsageSnapshot().rooms['Drawing Room'].power, 60)
+assert.equal(estimateTodayKWh(60, new Date('2026-07-03T12:00:00')), 0.72)
+assert.match(createStatusSnapshot().message, /Drawing Room: 1 fan ON/)
 
 const disabledFan = updateDeviceStatus('drawing_room_fan_1', 'OFF')
 assert.equal(disabledFan.currentPowerW, 0)

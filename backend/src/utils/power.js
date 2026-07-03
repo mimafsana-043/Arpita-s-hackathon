@@ -8,8 +8,11 @@ export function calculateRoomSummary(devices, roomNames) {
     const roomDevices = devices.filter((device) => device.room === room)
     const activeDevices = roomDevices.filter(isDeviceOn)
 
+    const powerW = activeDevices.reduce((total, device) => total + getCurrentPowerW(device), 0)
+
     return [room, {
-      powerW: activeDevices.reduce((total, device) => total + getCurrentPowerW(device), 0),
+      powerW,
+      power: powerW,
       activeFans: activeDevices.filter((device) => device.type === 'fan').length,
       activeLights: activeDevices.filter((device) => device.type === 'light').length,
       totalDevicesOn: activeDevices.length,

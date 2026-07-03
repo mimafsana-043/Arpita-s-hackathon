@@ -2,6 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import { config } from './config.js'
 import { getAllDevices } from './store/deviceStore.js'
+import { apiRouter } from './routes/apiRoutes.js'
 
 const app = express()
 
@@ -18,8 +19,18 @@ app.get('/health', (_request, response) => {
   })
 })
 
+app.use(apiRouter)
+
 app.use((_request, response) => {
   response.status(404).json({ status: 'NOT_FOUND', message: 'Route not found' })
+})
+
+app.use((error, _request, response, _next) => {
+  const statusCode = Number.isInteger(error.statusCode) ? error.statusCode : 500
+  response.status(statusCode).json({
+    status: 'ERROR',
+    message: statusCode === 500 ? 'Unexpected server error' : error.message,
+  })
 })
 
 const server = app.listen(config.port, () => {

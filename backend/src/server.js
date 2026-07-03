@@ -1,10 +1,15 @@
 import express from 'express'
 import cors from 'cors'
+import { createServer } from 'node:http'
 import { config } from './config.js'
 import { getAllDevices } from './store/deviceStore.js'
 import { apiRouter } from './routes/apiRoutes.js'
+import { closeSocket, emitLiveUpdate, initializeSocket } from './realtime/socket.js'
+import { startSimulator, stopSimulator } from './simulator/simulator.js'
 
 const app = express()
+const server = createServer(app)
+initializeSocket(server)
 
 app.disable('x-powered-by')
 app.use(cors({ origin: config.frontendOrigin }))
@@ -33,12 +38,27 @@ app.use((error, _request, response, _next) => {
   })
 })
 
-const server = app.listen(config.port, () => {
+server.listen(config.port, () => {
   console.log(`Smart Office backend listening on http://localhost:${config.port}`)
+  startSimulator({
+    onTick: ({ changedDevices, phase, timestamp }) => {
+      const snapshot = emitLiveUpdate({
+        changedDevices,
+        phase,
+        timestamp,
+        emitTick: true,
+      })
+      console.log(
+        `Simulator tick (${phase}) changed ${changedDevices.length} device${changedDevices.length === 1 ? '' : 's'}; total power ${snapshot.usage.totalPowerW}W`,
+      )
+    },
+  })
 })
 
 function shutdown(signal) {
   console.log(`${signal} received. Closing HTTP server.`)
+  stopSimulator()
+  closeSocket()
   server.close(() => process.exit(0))
 }
 

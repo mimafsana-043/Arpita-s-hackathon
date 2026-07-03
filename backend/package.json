@@ -8,12 +8,14 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "verify": "node src/scripts/verifyStore.js"
+    "verify": "node src/scripts/verifyStore.js && node src/scripts/verifySimulator.js",
+    "validate": "node src/scripts/validateBackend.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "socket.io": "^4.8.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"

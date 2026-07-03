@@ -1,0 +1,88 @@
+.office-map { position: relative; overflow: hidden; margin-bottom: 24px; padding: 0; }
+.office-map__header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 25px 28px 20px; }
+.office-map__header h2 { margin: 0 0 5px; font-size: 25px; letter-spacing: -.035em; }
+.office-map__header p:last-child { margin: 0; color: var(--muted); font-size: 12px; }
+.office-map__meta { display: flex; align-items: center; gap: 14px; }
+.office-map__meta > strong { font-family: 'Manrope'; font-size: 13px; }
+.map-connection { display: inline-flex; align-items: center; gap: 7px; padding: 7px 10px; border-radius: 999px; color: #61716b; background: #eff3f1; font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.map-connection i { width: 7px; height: 7px; border-radius: 50%; background: #9ca9a4; }
+.map-connection--live { color: #08794d; background: #e3f7ed; }
+.map-connection--live i { background: #16a76d; box-shadow: 0 0 0 4px rgba(22,167,109,.12); animation: map-live-pulse 2s ease-out infinite; }
+.map-connection--mock { color: #9b6810; background: #fff2d5; }
+.map-connection--mock i { background: #e3a42e; }
+.map-connection--disconnected { color: #b44d41; background: #ffebe8; }
+.map-connection--disconnected i { background: #dc6558; }
+@keyframes map-live-pulse { 50% { box-shadow: 0 0 0 7px rgba(22,167,109,0); } }
+
+.office-map__legend { display: flex; align-items: center; gap: 15px; padding: 10px 28px; border-block: 1px solid #e7edea; background: #f9fbfa; }
+.office-map__legend > span { display: flex; align-items: center; gap: 5px; color: #53635d; font-size: 9px; font-weight: 700; text-transform: capitalize; }
+.office-map__legend svg { width: 20px; height: 20px; color: #5b6d66; }
+.office-map__legend .legend-window { color: #3d9fd1; }
+.office-map__legend small { margin-left: auto; color: #8c9994; font-size: 9px; }
+.office-map__scroll { overflow-x: auto; padding: 8px 18px 0; scrollbar-width: thin; scrollbar-color: #cbd7d1 transparent; }
+.office-map__svg { display: block; min-width: 750px; height: auto; aspect-ratio: 1200 / 430; }
+.office-map__floor { fill: #f8faf8; stroke: none; }
+.office-map__grid { fill: url(#floor-grid); stroke: none; opacity: .36; }
+#floor-grid path { stroke: #dfe8e3; stroke-width: 1; }
+.office-map__room-zone { fill: rgba(255,255,255,.38); stroke: none; }
+.office-map__outer-wall, .office-map__wall { fill: none; stroke: #263b34; stroke-width: 8; }
+.office-map__room-name { fill: #21332d; stroke: none; font-family: 'Manrope', sans-serif; font-size: 17px; font-weight: 800; letter-spacing: -.02em; }
+.office-map__room-power { fill: #0c8b59; stroke: none; font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 800; }
+.office-map__window line { stroke: #54add6; stroke-width: 5; }
+.office-map__wall-gap { stroke: #f8faf8; stroke-width: 12; }
+.office-map__door path { stroke: #8a9a94; stroke-width: 3; }
+.office-map__door-swing { stroke-dasharray: 5 5; opacity: .65; }
+
+.map-device { cursor: pointer; outline: none; }
+.map-device__target { fill: rgba(255,255,255,.74); stroke: #d6e0dc; stroke-width: 2; transition: fill .2s ease, stroke .2s ease, transform .2s ease; }
+.map-device:hover .map-device__target, .map-device:focus-visible .map-device__target, .map-device--selected .map-device__target { fill: #fff; stroke: #18a873; stroke-width: 3; transform: scale(1.06); }
+.map-device__fan-rotor { fill: #73827c; stroke: none; transform-box: fill-box; transform-origin: center; }
+.map-device--fan.map-device--on .map-device__fan-rotor { fill: #158c61; animation: office-fan-spin 3.2s linear infinite; }
+@keyframes office-fan-spin { to { transform: rotate(360deg); } }
+.map-device__light circle { fill: #aeb8b4; stroke: #8c9994; stroke-width: 2; }
+.map-device__light path { stroke: #8c9994; stroke-width: 3; }
+.map-device--light.map-device--on .map-device__light circle { fill: #ffd65c; stroke: #ebb638; }
+.map-device--light.map-device--on .map-device__light path { stroke: #b98513; }
+.map-device__label { fill: #51625c; stroke: none; font-family: 'DM Sans', sans-serif; font-size: 11px; font-weight: 700; }
+.map-device__status-dot { fill: #a5b0ac; stroke: #fff; stroke-width: 2; }
+.map-device--on .map-device__status-dot { fill: #11a36a; }
+.map-device--missing { cursor: not-allowed; opacity: .36; }
+
+.office-map__device-detail { min-height: 67px; display: flex; align-items: center; gap: 17px; margin: 2px 28px 24px; padding: 12px 15px; border: 1px dashed #d6dfdb; border-radius: 13px; color: var(--muted); background: #fafcfb; }
+.office-map__device-detail p { margin: auto; font-size: 11px; }
+.office-map__device-detail--visible { border-style: solid; border-color: #cfe0d8; background: #f5fbf8; }
+.office-map__device-detail > div { display: flex; flex-direction: column; }
+.office-map__device-detail > div:nth-of-type(2) { margin-left: auto; text-align: right; }
+.office-map__device-detail strong { color: var(--ink); font-size: 12px; }
+.office-map__device-detail div span { margin-top: 2px; color: var(--muted); font-size: 9px; }
+.detail-state { display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 999px; font-size: 9px; font-weight: 800; }
+.detail-state i { width: 6px; height: 6px; border-radius: 50%; }
+.detail-state--on { color: #08794d; background: #dff5e9; }
+.detail-state--on i { background: #11a36a; }
+.detail-state--off { color: #71807a; background: #e9eeeb; }
+.detail-state--off i { background: #9aa6a1; }
+.office-map__device-detail button { width: 28px; height: 28px; padding: 0; border: 0; border-radius: 8px; color: #6f7d78; background: #e8efec; cursor: pointer; font-size: 18px; line-height: 1; }
+.office-map__device-detail button:hover { color: var(--ink); background: #dce7e2; }
+
+@media (max-width: 760px) {
+  .office-map__header { align-items: flex-start; padding: 22px 20px 18px; }
+  .office-map__meta { align-items: flex-end; flex-direction: column; gap: 7px; }
+  .office-map__legend { overflow-x: auto; padding-inline: 20px; }
+  .office-map__legend small { display: none; }
+  .office-map__scroll { padding-inline: 8px; }
+  .office-map__device-detail { margin-inline: 20px; }
+}
+
+@media (max-width: 520px) {
+  .office-map__header h2 { font-size: 21px; }
+  .office-map__header p:last-child, .office-map__meta > strong { display: none; }
+  .map-connection { white-space: nowrap; }
+  .office-map__device-detail { flex-wrap: wrap; gap: 10px; }
+  .office-map__device-detail > div:nth-of-type(2) { width: 100%; margin-left: 39px; text-align: left; }
+  .office-map__device-detail button { margin-left: auto; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-device--fan.map-device--on .map-device__fan-rotor, .map-connection--live i { animation: none; }
+  .map-device__target { transition: none; }
+}

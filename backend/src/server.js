@@ -48,8 +48,14 @@ server.listen(config.port, () => {
         timestamp,
         emitTick: true,
       })
+      const changeDetails = changedDevices
+        .map((device) => `${device.room} ${device.name} -> ${device.status}`)
+        .join(', ')
+
       console.log(
-        `Simulator tick (${phase}) changed ${changedDevices.length} device${changedDevices.length === 1 ? '' : 's'}; total power ${snapshot.usage.totalPowerW}W`,
+        `Simulator tick (${phase}) changed ${changedDevices.length} device${changedDevices.length === 1 ? '' : 's'}`
+        + (changeDetails ? `: ${changeDetails}` : '')
+        + `; total power ${snapshot.usage.totalPowerW}W`,
       )
     },
   })

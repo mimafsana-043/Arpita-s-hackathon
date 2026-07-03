@@ -1,0 +1,19 @@
+{
+  "name": "smart-office-discord-bot",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node discordBot.js",
+    "dev": "node --watch discordBot.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest",
+    "discord.js": "latest",
+    "dotenv": "latest",
+    "socket.io-client": "^4.8.1"
+  }
+}

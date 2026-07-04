@@ -1,4 +1,4 @@
-# ⚡ Smart Office Energy Monitoring System
+# Smart Office Energy Monitoring System
 
 ![React](https://img.shields.io/badge/React-Frontend-61DAFB?logo=react&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js-Backend-339933?logo=node.js&logoColor=white)
@@ -6,137 +6,121 @@
 ![Socket.IO](https://img.shields.io/badge/Socket.IO-Real--time-010101?logo=socket.io&logoColor=white)
 ![Discord](https://img.shields.io/badge/Discord-Smart_Bot-5865F2?logo=discord&logoColor=white)
 
-A full-stack smart office solution that monitors lights and fans, calculates live energy consumption, detects wasteful usage, and delivers the same real-time information through both a web dashboard and a Discord bot.
+A hackathon-ready smart office platform that monitors simulated lights and fans, calculates live energy consumption, detects wasteful usage, and presents the same information through a React dashboard and a Discord bot.
 
-The system models **3 rooms and 18 devices**. A shared backend acts as the single source of truth, while REST APIs provide reliable snapshots and Socket.IO pushes live changes to every connected client.
+The system models three rooms—**Drawing Room**, **Work Room 1**, and **Work Room 2**—with two fans and four lights in each room. That gives six devices per room and **18 devices** in total. The backend is their single source of truth; no physical hardware is required to run the project.
 
-## ✨ What the Project Does
+## Problem Statement
 
-- Monitors **18 lights and fans** across Drawing Room, Work Room 1, and Work Room 2
-- Displays live device status and room-wise power consumption
-- Visualizes the office through an interactive top-view floor plan
-- Animates running fans and active lights for quick visual feedback
-- Tracks recent power changes through a rolling trend chart
-- Simulates realistic office activity based on the time of day
-- Detects after-hours usage, long-running devices, fully active rooms, and high power consumption
-- Sends live alerts and energy summaries to Discord
-- Keeps the dashboard and bot synchronized through one shared backend
-- Continues to demonstrate the UI and bot using mock data when the backend is unavailable
+Office devices are often left running when they are not needed, wasting energy and making consumption difficult to understand. Traditional monitoring also tends to fragment information across separate tools.
 
-## 🧩 System Architecture
+This project provides one shared, real-time view of office energy use. Simulated device activity flows through a central backend to both a visual web dashboard and a conversational Discord interface, helping users spot unnecessary usage quickly.
 
-```mermaid
-flowchart LR
-    SIM[Smart Device Simulator] --> STORE[(Shared Device Store)]
-    STORE --> API[Express REST API]
-    STORE --> SOCKET[Socket.IO Server]
-    STORE --> ALERT[Alert Rule Engine]
-    ALERT --> API
-    ALERT --> SOCKET
-    API --> WEB[React Dashboard]
-    SOCKET --> WEB
-    API --> BOT[Discord Bot]
-    SOCKET --> BOT
-    LLM[Optional Anthropic LLM] -. friendly phrasing .-> BOT
-```
+## Key Features
 
-### Data flow
+- Monitors 18 simulated devices across three rooms
+- Shows live and room-wise device status
+- Calculates total power and per-room power consumption
+- Displays active energy alerts
+- Pushes real-time dashboard updates with Socket.IO—no manual refresh required
+- Simulates realistic office activity over time
+- Provides an interactive top-view office visualization
+- Answers room, status, and usage questions through Discord
+- Sends newly detected alerts to a configured Discord channel
+- Keeps the dashboard and Discord bot synchronized through one backend
+- Supports mock fallback data for demonstrations when the backend is unavailable
 
-1. The simulator or a manual API request updates the shared in-memory device store.
-2. The backend recalculates power usage and active alerts.
-3. Socket.IO immediately broadcasts the latest state.
-4. The React dashboard updates without a page refresh.
-5. The Discord bot reads the same data and posts newly detected alerts.
-
-## 🖥️ Dashboard Highlights
-
-- Live connection, reconnecting, disconnected, and mock-mode indicators
-- Overview, Details, and combined display modes
-- Responsive room cards with active fan/light counts
-- Interactive SVG floor plan with keyboard-accessible device inspection
-- Live office and room power meters
-- Recent power trend with the latest 100 readings
-- Backend-powered alert panel with a local demo fallback
-- Automatic REST resynchronization after a Socket.IO reconnect
-- Reduced-motion support and mobile-friendly layout
-
-## 🤖 Discord Bot Commands
-
-The command prefix is `!` by default and can be changed through `COMMAND_PREFIX`.
-
-| Command | Description |
-| --- | --- |
-| `!ping` | Checks whether the bot is online |
-| `!status` | Shows a concise status summary for all rooms |
-| `!room drawing` | Shows the devices and usage in the Drawing Room |
-| `!room work1` | Shows the devices and usage in Work Room 1 |
-| `!room work2` | Shows the devices and usage in Work Room 2 |
-| `!usage` | Shows total power, the highest-consuming room, and estimated daily usage |
-
-The bot also watches backend alerts using Socket.IO and periodic polling. Each alert is posted only once to the configured Discord channel.
-
-An Anthropic API key is optional. When provided, the bot can turn factual responses into short, friendly messages without changing the underlying numbers. Without a key, deterministic built-in templates are used.
-
-## 🚨 Smart Alert Rules
-
-| Alert | Trigger |
-| --- | --- |
-| After-hours usage | One or more devices remain ON outside configured office hours |
-| Continuous runtime | A device stays ON longer than the configured limit |
-| Fully active room | Every device in a room stays ON beyond the configured limit |
-| High power usage | Combined office load reaches the configured watt threshold |
-
-Alerts are normalized and deduplicated before being sent to the dashboard or Discord.
-
-## 🛠️ Technology Stack
-
-| Layer | Technologies |
-| --- | --- |
-| Frontend | React, Vite, Socket.IO Client, CSS, SVG |
-| Backend | Node.js, Express, Socket.IO, CORS, dotenv |
-| Bot | Discord.js, Socket.IO Client, optional Anthropic SDK |
-| Data | Shared in-memory store with bundled mock datasets |
-| Communication | REST API + real-time WebSocket/polling transport |
-
-## 📁 Project Structure
+## System Architecture
 
 ```text
-Arpita-s-hackathon/
-├── frontend/                 # React dashboard
-│   ├── src/components/       # Map, room cards, alerts, meters and charts
-│   ├── src/hooks/            # REST + Socket.IO synchronization
-│   ├── src/services/         # Backend API and socket clients
-│   └── src/data/             # Frontend fallback data
-├── backend/                  # Shared application backend
+Simulated Device Layer
+          │
+          ▼
+Backend API + In-Memory State Store
+          │
+          ├──────── REST API ────────┐
+          └──── Socket.IO events ────┤
+                                     ▼
+                         Web Dashboard + Discord Bot
+                                     │
+                                     ▼
+                                   Users
+```
+
+The simulator changes device states in the shared in-memory store. The Node.js backend recalculates usage and alerts, exposes snapshots through REST endpoints, and broadcasts updates through Socket.IO. The React dashboard and Discord bot both consume this backend data, so their readings remain consistent.
+
+### Architecture Diagram
+
+![Smart Office system architecture](docs/system-diagram.png)
+
+> The diagram should be stored at `docs/system-diagram.png`. If it is not visible, add the image to that path.
+
+## Hardware Schematic
+
+Real hardware is **not required**. The project uses simulated device data, while the schematic demonstrates how one representative room could be implemented with an ESP32 or Arduino.
+
+The reduced one-room concept includes:
+
+- Three LEDs representing room lights
+- Two motors or fan indicators
+- Switches for manual input
+- A relay-driver concept for safely controlling loads
+- An optional current-sensor concept for measuring energy use
+- A Wokwi or Tinkercad simulation before any physical build
+
+![One-room representative hardware schematic](docs/hardware-schematic.png)
+
+> The schematic should be stored at `docs/hardware-schematic.png`. If it is not visible, add the image to that path. See `docs/pin-mapping-table.md` for the intended pin mapping when available.
+
+## Technology Stack
+
+| Layer | Technology | Purpose |
+| --- | --- | --- |
+| Backend | Node.js, Express | Central API and application state |
+| Real-time | Socket.IO | Live device, usage, and alert updates |
+| Frontend | React, Vite, CSS, SVG | Responsive monitoring dashboard |
+| Discord bot | discord.js, Socket.IO Client | Commands and live alert delivery |
+| Data | In-memory simulated data | Shared 18-device state |
+| Hardware concept | ESP32/Arduino, Wokwi/Tinkercad | Representative one-room schematic |
+
+## Folder Structure
+
+```text
+smart-office-energy-monitor/
+├── backend/
+│   ├── src/
+│   ├── routes/
+│   ├── services/
+│   └── data/
+├── frontend/
 │   └── src/
-│       ├── data/             # Initial 18-device inventory
-│       ├── routes/           # REST endpoints
-│       ├── simulator/        # Time-aware office activity simulator
-│       ├── realtime/         # Socket.IO event broadcasting
-│       ├── services/         # Snapshots and alert rules
-│       └── store/            # Single source of truth
-├── bot/                      # Discord bot
-│   ├── commands/             # ping, status, room and usage commands
-│   └── services/             # API, socket, formatting, mock and LLM helpers
+├── bot/
+│   ├── discordBot.js
+│   ├── commands/
+│   └── services/
+├── docs/
+│   ├── system-diagram.png
+│   ├── hardware-schematic.png
+│   ├── pin-mapping-table.md
+│   ├── testing-checklist.md
+│   └── demo-script.md
+├── .env.example
 └── README.md
 ```
 
-## 🚀 Run Locally
+> In this repository, backend routes, services, and data are organized under `backend/src/`. Environment examples are provided inside the individual service folders. Documentation assets listed above should be added under `docs/` if they are not present yet.
+
+## Run Locally
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) **18 or newer**
+- Node.js 18 or newer
 - npm
-- A Discord bot token only if you want to run the Discord integration
+- A Discord application and bot token only if running the Discord integration
 
-### 1. Clone the repository
+Clone the repository, then start each service in a separate terminal. Start the backend first so the other clients can connect to it.
 
-```bash
-git clone <your-repository-url>
-cd Arpita-s-hackathon
-```
-
-### 2. Start the backend
+### 1. Backend Setup
 
 ```bash
 cd backend
@@ -145,13 +129,9 @@ npm install
 npm run dev
 ```
 
-The backend starts at `http://localhost:5000`.
+The backend starts at `http://localhost:5000` by default.
 
-> On macOS, AirPlay Receiver may already use port `5000`. Set `PORT=5050` in `backend/.env`, then use `http://localhost:5050` in the frontend and bot environment files.
-
-### 3. Start the frontend
-
-Open a second terminal:
+### 2. Frontend Setup
 
 ```bash
 cd frontend
@@ -160,37 +140,30 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser.
+Open `http://localhost:5173` in a browser.
 
-### 4. Start the Discord bot (optional)
-
-Open a third terminal:
+### 3. Discord Bot Setup
 
 ```bash
 cd bot
 cp .env.example .env
 npm install
-npm start
+node discordBot.js
 ```
 
-Before starting it, add your Discord token and channel information to `bot/.env`. Enable **Message Content Intent** for the bot in the Discord Developer Portal because the project uses prefix-based commands.
+Create a bot in the [Discord Developer Portal](https://discord.com/developers/applications), enable **Message Content Intent**, invite it to the test server, and place its credentials in `bot/.env`.
 
-> Never commit `.env` files or expose Discord/LLM API keys. Only `.env.example` files should be shared.
+## Environment Variables
 
-## ⚙️ Environment Configuration
+Copy the relevant `.env.example` file to `.env` before starting each service. Keep local values out of version control.
 
 ### Backend — `backend/.env`
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `PORT` | `5000` | REST and Socket.IO server port |
-| `FRONTEND_ORIGIN` | `http://localhost:5173` | Allowed dashboard origin |
-| `OFFICE_START_HOUR` | `9` | Office opening hour |
-| `OFFICE_END_HOUR` | `17` | Office closing hour |
-| `SIMULATOR_INTERVAL_MS` | `7000` | Delay between simulator ticks |
-| `DEVICE_ON_TIMEOUT_MINUTES` | `120` | Continuous-device alert limit |
-| `ROOM_FULLY_ON_TIMEOUT_MINUTES` | `120` | Fully-active-room alert limit |
-| `HIGH_POWER_THRESHOLD_W` | `250` | High-load alert threshold |
+```env
+PORT=5000
+```
+
+The backend example also includes optional settings for the frontend origin, office hours, simulator interval, and alert thresholds.
 
 ### Frontend — `frontend/.env`
 
@@ -198,55 +171,77 @@ Before starting it, add your Discord token and channel information to `bot/.env`
 VITE_BACKEND_URL=http://localhost:5000
 ```
 
-### Discord bot — `bot/.env`
+### Discord Bot — `bot/.env`
 
 ```env
 DISCORD_BOT_TOKEN=
-DISCORD_CLIENT_ID=
 DISCORD_GUILD_ID=
 ALERT_CHANNEL_ID=
-
 BACKEND_API_URL=http://localhost:5000
 BACKEND_SOCKET_URL=http://localhost:5000
-
 COMMAND_PREFIX=!
 ALERT_POLL_INTERVAL_MS=30000
 MOCK_MODE=false
-
-# Optional
-ANTHROPIC_API_KEY=
-LLM_MODEL=claude-haiku-4-5-20251001
 ```
 
-## 🔌 API Overview
+`DISCORD_CLIENT_ID` is also supported. An Anthropic API key is optional for friendlier wording; core bot responses work without it.
 
-| Method | Endpoint | Purpose |
+## API Endpoints
+
+Base URL: `http://localhost:5000`
+
+| Method | Endpoint | Description |
 | --- | --- | --- |
-| `GET` | `/health` | Backend health and device count |
-| `GET` | `/api/devices` | All 18 device snapshots |
-| `GET` | `/api/rooms` | Summaries for all rooms |
-| `GET` | `/api/rooms/:roomName` | One room's details |
-| `GET` | `/api/usage` | Total, room-wise, and estimated daily usage |
-| `GET` | `/api/alerts` | Currently active smart alerts |
-| `GET` | `/api/status` | Human-friendly office summary |
-| `POST` | `/api/devices/:id/toggle` | Toggle a device ON/OFF |
+| `GET` | `/health` | Check backend health and device count |
+| `GET` | `/devices` | Return all 18 device snapshots |
+| `GET` | `/rooms` | Return summaries for all three rooms |
+| `GET` | `/room/:roomName` | Return one room using its name or alias |
+| `GET` | `/usage` | Return total and per-room power usage |
+| `GET` | `/alerts` | Return active smart alerts |
+| `POST` | `/api/devices/:id/toggle` | Toggle a device on or off |
 | `POST` | `/api/devices/:id/status` | Set a device to `ON` or `OFF` |
 
-Supported room aliases include `drawing`, `drawing-room`, `work1`, `work-room-1`, `work2`, and `work-room-2`.
+The read endpoints are also available under the `/api` prefix, such as `/api/devices`, `/api/rooms`, `/api/usage`, and `/api/alerts`.
 
-### Live Socket.IO events
+## Discord Bot Commands
 
-| Event | Payload |
+| Command | Description |
 | --- | --- |
-| `devices:update` | Complete device list |
-| `device:update` | One changed device |
-| `usage:update` | Latest power summary |
-| `alerts:update` | Complete active-alert list |
-| `simulator:tick` | Simulator phase, timestamp, change count, and total power |
+| `!status` | Show a concise status summary for all rooms |
+| `!room drawing` | Show Drawing Room devices and power usage |
+| `!room work1` | Show Work Room 1 devices and power usage |
+| `!room work2` | Show Work Room 2 devices and power usage |
+| `!usage` | Show total usage and the highest-consuming rooms |
 
-## 🧪 Verification
+**Discord bot responses are generated from live backend API data, not hardcoded values.** With `MOCK_MODE=false`, the bot and dashboard read from the same source of truth. The bot can also monitor backend alerts through Socket.IO and polling.
 
-Validate the backend's device inventory, shared-store mutations, simulator behavior, power calculations, alert rules, and deduplication:
+## Suggested Demo Flow
+
+1. Start the backend, frontend, and Discord bot.
+2. Show that `/devices` returns 18 devices and `/rooms` returns three rooms.
+3. Open the dashboard and point out the live connection badge, room cards, floor plan, power breakdown, and alert panel.
+4. Wait for a simulator tick or toggle a device through the API.
+5. Show the dashboard changing immediately without a refresh.
+6. Run `!status`, `!room work1`, and `!usage` in Discord.
+7. Compare the dashboard and Discord values to demonstrate that both use the same backend.
+8. Temporarily lower an alert threshold to demonstrate a live dashboard and Discord alert.
+9. Present the representative hardware schematic as the path from simulation to a future physical prototype.
+
+## Testing Checklist
+
+- [ ] Backend starts on `localhost:5000`
+- [ ] `/devices` returns 18 devices
+- [ ] `/rooms` returns three room summaries
+- [ ] `/usage` returns total power
+- [ ] Simulator changes device states over time
+- [ ] Dashboard updates without refresh
+- [ ] Discord bot replies to `!status`
+- [ ] Discord bot replies to `!room`
+- [ ] Discord bot replies to `!usage`
+- [ ] Dashboard and bot show the same backend data
+- [ ] `.env` is not committed
+
+Run the included automated checks as well:
 
 ```bash
 cd backend
@@ -254,40 +249,41 @@ npm run verify
 npm run validate
 ```
 
-Check that the production frontend compiles successfully:
-
 ```bash
 cd frontend
 npm run build
 ```
 
-Quick health check:
+See `docs/testing-checklist.md` and `docs/demo-script.md` for expanded judge-facing material when those files are available.
 
-```bash
-curl http://localhost:5000/health
-```
+## Security Notes
 
-A healthy response reports `"status": "OK"` and `"deviceCount": 18`.
+> **Never commit `.env` files or Discord bot tokens. If a token is exposed, regenerate it immediately from the Discord Developer Portal.**
 
-## 🎬 Suggested Demo Flow
+- Commit only safe `.env.example` templates with blank secrets.
+- Do not paste credentials into source files, screenshots, issues, or chat messages.
+- Restrict the bot to the permissions and channels it needs.
+- Use environment-specific CORS settings outside local development.
 
-1. Start the backend, frontend, and Discord bot.
-2. Show the dashboard's **Live** badge, room cards, floor plan, and current power.
-3. Toggle a device through the API and watch the dashboard update instantly.
-4. Show the new point appearing in the recent power trend.
-5. Lower an alert threshold temporarily to demonstrate a live alert.
-6. Confirm that the same alert appears once in the configured Discord channel.
-7. Run `!status`, `!room work1`, and `!usage` to show shared real-time data.
-8. Stop the backend briefly to demonstrate dashboard fallback/reconnection behavior.
+## Future Improvements
 
-## 🔭 Future Improvements
-
-- Connect physical IoT relays and smart meters instead of simulated devices
-- Persist historical energy readings in a database
+- Connect physical ESP32/Arduino relays and smart meters
+- Persist historical readings in a database
 - Add authentication and role-based device control
-- Add daily/weekly cost and carbon-emission analytics
-- Deploy the dashboard, API, and bot as production services
+- Add daily and weekly cost, carbon, and usage analytics
+- Add configurable schedules and anomaly detection
+- Package the dashboard, API, and bot for production deployment
+
+## Team Contributions
+
+| Contributor | Contribution summary |
+| --- | --- |
+| Amio-27 | Core project foundation and frontend/backend organization |
+| HishamXS420 | Discord bot integration, hackathon documentation work, and simulator logging improvements |
+| Project team | Architecture, integration testing, dashboard/bot data consistency, hardware concept, and demo preparation |
+
+Contribution summaries are based on the repository history and can be expanded with full member names and presentation roles before submission.
 
 ---
 
-Built as a hackathon-ready demonstration of real-time energy visibility, automation, and multi-channel office monitoring.
+Built as a hackathon demonstration of real-time energy visibility, shared data, and multi-channel office monitoring.

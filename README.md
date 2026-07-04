@@ -53,24 +53,17 @@ The simulator changes device states in the shared in-memory store. The Node.js b
 
 ![Smart Office system architecture](docs/system-diagram.png)
 
-> The diagram should be stored at `docs/system-diagram.png`. If it is not visible, add the image to that path.
+## Hardware Reference
 
-## Hardware Schematic
+Physical hardware is **not required** to run this repository. The current hardware documentation describes a reduced, one-room ESP32 prototype with three light indicators, two fan indicators, and five manual switches. It is a proof of concept for the simulated 18-device office, not a one-to-one copy of the backend inventory.
 
-Real hardware is **not required**. The project uses simulated device data, while the schematic demonstrates how one representative room could be implemented with an ESP32 or Arduino.
+- Switch inputs: GPIO 13, 12, 14, 27, and 26 using `INPUT_PULLUP`
+- Light outputs: GPIO 18, 19, and 21
+- Fan outputs: GPIO 22 and 23
+- Real AC lights and fans must use properly isolated relay modules or contactors
+- An ACS712 or CT sensor can be added for current and power measurement
 
-The reduced one-room concept includes:
-
-- Three LEDs representing room lights
-- Two motors or fan indicators
-- Switches for manual input
-- A relay-driver concept for safely controlling loads
-- An optional current-sensor concept for measuring energy use
-- A Wokwi or Tinkercad simulation before any physical build
-
-![One-room representative hardware schematic](docs/hardware-schematic.png)
-
-> The schematic should be stored at `docs/hardware-schematic.png`. If it is not visible, add the image to that path. See `docs/pin-mapping-table.md` for the intended pin mapping when available.
+See the complete [ESP32 pin mapping and electrical notes](docs/pin-mapping-table.md), which is the repository's current hardware reference.
 
 ## Technology Stack
 
@@ -81,34 +74,36 @@ The reduced one-room concept includes:
 | Frontend | React, Vite, CSS, SVG | Responsive monitoring dashboard |
 | Discord bot | discord.js, Socket.IO Client | Commands and live alert delivery |
 | Data | In-memory simulated data | Shared 18-device state |
-| Hardware concept | ESP32/Arduino, Wokwi/Tinkercad | Representative one-room schematic |
+| Hardware concept | ESP32 | Representative one-room pin and connection plan |
 
 ## Folder Structure
 
 ```text
-smart-office-energy-monitor/
+Arpita-s-hackathon/
 ├── backend/
 │   ├── src/
-│   ├── routes/
-│   ├── services/
-│   └── data/
+│   │   ├── data/
+│   │   ├── realtime/
+│   │   ├── routes/
+│   │   ├── scripts/
+│   │   ├── services/
+│   │   ├── simulator/
+│   │   ├── store/
+│   │   └── server.js
+│   └── .env.example
 ├── frontend/
-│   └── src/
+│   ├── src/
+│   └── .env.example
 ├── bot/
-│   ├── discordBot.js
 │   ├── commands/
-│   └── services/
+│   ├── services/
+│   ├── discordBot.js
+│   └── .env.example
 ├── docs/
 │   ├── system-diagram.png
-│   ├── hardware-schematic.png
-│   ├── pin-mapping-table.md
-│   ├── testing-checklist.md
-│   └── demo-script.md
-├── .env.example
+│   └── pin-mapping-table.md
 └── README.md
 ```
-
-> In this repository, backend routes, services, and data are organized under `backend/src/`. Environment examples are provided inside the individual service folders. Documentation assets listed above should be added under `docs/` if they are not present yet.
 
 ## Run Locally
 
@@ -148,7 +143,7 @@ Open `http://localhost:5173` in a browser.
 cd bot
 cp .env.example .env
 npm install
-node discordBot.js
+npm start
 ```
 
 Create a bot in the [Discord Developer Portal](https://discord.com/developers/applications), enable **Message Content Intent**, invite it to the test server, and place its credentials in `bot/.env`.
@@ -161,9 +156,14 @@ Copy the relevant `.env.example` file to `.env` before starting each service. Ke
 
 ```env
 PORT=5000
+FRONTEND_ORIGIN=http://localhost:5173
+OFFICE_START_HOUR=9
+OFFICE_END_HOUR=17
+SIMULATOR_INTERVAL_MS=7000
+DEVICE_ON_TIMEOUT_MINUTES=120
+ROOM_FULLY_ON_TIMEOUT_MINUTES=120
+HIGH_POWER_THRESHOLD_W=250
 ```
-
-The backend example also includes optional settings for the frontend origin, office hours, simulator interval, and alert thresholds.
 
 ### Frontend — `frontend/.env`
 
@@ -175,6 +175,7 @@ VITE_BACKEND_URL=http://localhost:5000
 
 ```env
 DISCORD_BOT_TOKEN=
+DISCORD_CLIENT_ID=
 DISCORD_GUILD_ID=
 ALERT_CHANNEL_ID=
 BACKEND_API_URL=http://localhost:5000
@@ -182,31 +183,33 @@ BACKEND_SOCKET_URL=http://localhost:5000
 COMMAND_PREFIX=!
 ALERT_POLL_INTERVAL_MS=30000
 MOCK_MODE=false
+ANTHROPIC_API_KEY=
+LLM_MODEL=claude-haiku-4-5-20251001
 ```
 
-`DISCORD_CLIENT_ID` is also supported. An Anthropic API key is optional for friendlier wording; core bot responses work without it.
+`ANTHROPIC_API_KEY` and `LLM_MODEL` are optional. Without them, the bot uses its built-in response templates and all core commands continue to work.
 
 ## API Endpoints
 
 Base URL: `http://localhost:5000`
 
-| Method | Endpoint | Description |
-| --- | --- | --- |
-| `GET` | `/health` | Check backend health and device count |
-| `GET` | `/devices` | Return all 18 device snapshots |
-| `GET` | `/rooms` | Return summaries for all three rooms |
-| `GET` | `/room/:roomName` | Return one room using its name or alias |
-| `GET` | `/usage` | Return total and per-room power usage |
-| `GET` | `/alerts` | Return active smart alerts |
-| `POST` | `/api/devices/:id/toggle` | Toggle a device on or off |
-| `POST` | `/api/devices/:id/status` | Set a device to `ON` or `OFF` |
-
-The read endpoints are also available under the `/api` prefix, such as `/api/devices`, `/api/rooms`, `/api/usage`, and `/api/alerts`.
+| Method | Canonical endpoint | Alias | Description |
+| --- | --- | --- | --- |
+| `GET` | `/health` | — | Check backend health and device count |
+| `GET` | `/api/devices` | `/devices` | Return all 18 device snapshots |
+| `GET` | `/api/rooms` | `/rooms` | Return summaries for all three rooms |
+| `GET` | `/api/rooms/:roomName` | `/room/:roomName` | Return one room using its name or alias |
+| `GET` | `/api/usage` | `/usage` | Return total and per-room power usage |
+| `GET` | `/api/alerts` | `/alerts` | Return active smart alerts |
+| `GET` | `/api/status` | — | Return a human-friendly office summary |
+| `POST` | `/api/devices/:id/toggle` | — | Toggle a device on or off |
+| `POST` | `/api/devices/:id/status` | — | Set a device to `ON` or `OFF` |
 
 ## Discord Bot Commands
 
 | Command | Description |
 | --- | --- |
+| `!ping` | Confirm that the Discord bot is online |
 | `!status` | Show a concise status summary for all rooms |
 | `!room drawing` | Show Drawing Room devices and power usage |
 | `!room work1` | Show Work Room 1 devices and power usage |
@@ -225,7 +228,7 @@ The read endpoints are also available under the `/api` prefix, such as `/api/dev
 6. Run `!status`, `!room work1`, and `!usage` in Discord.
 7. Compare the dashboard and Discord values to demonstrate that both use the same backend.
 8. Temporarily lower an alert threshold to demonstrate a live dashboard and Discord alert.
-9. Present the representative hardware schematic as the path from simulation to a future physical prototype.
+9. Present the ESP32 pin map as the path from simulation to a future physical prototype.
 
 ## Testing Checklist
 
@@ -254,7 +257,7 @@ cd frontend
 npm run build
 ```
 
-See `docs/testing-checklist.md` and `docs/demo-script.md` for expanded judge-facing material when those files are available.
+For more detail, see the [backend](backend/README.md), [frontend](frontend/README.md), and [Discord bot](bot/README.md) guides.
 
 ## Security Notes
 
